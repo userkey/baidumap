@@ -24,12 +24,13 @@ import com.baidu.mapapi.map.MyLocationConfiguration.LocationMode;
 import com.baidu.mapapi.model.LatLng;
 
 public class GetLocation {
-	
+
 	MainActivity mainActivity = null;
 	MapView mMapView = null;
 	BaiduMap mBaiduMap = null;
-	
+
 	Boolean isFirstLoc = true;
+	Boolean startLoc = true;
 	LocationClient mLocClient = null;
 	LocationMode mCurrentMode = null;
 	BitmapDescriptor mCurrentMarker = null;
@@ -39,46 +40,61 @@ public class GetLocation {
 	float x = 0;
 	myThread t;
 	static Boolean isrun = true;
-	
+	float lastZoomLv = 19;
+
 	GetLocation(MainActivity mainActivity, MapView mMapView, BaiduMap mBaiduMap) {
 		// TODO Auto-generated constructor stub
-		
+
 		this.mainActivity = mainActivity;
 		this.mMapView = mMapView;
 		this.mBaiduMap = mBaiduMap;
+
+		sensorManager = (SensorManager) mainActivity
+				.getSystemService(Context.SENSOR_SERVICE);
+		Sensor sensor = sensorManager
+				.getDefaultSensor(Sensor.TYPE_ORIENTATION);
+		sensorManager.registerListener(new MySensorEventListener(),
+				sensor, SensorManager.SENSOR_DELAY_UI);
 		
-		requestLocButton = (Button) mainActivity.findViewById(R.id.locationButton);
+		requestLocButton = (Button) mainActivity
+				.findViewById(R.id.locationButton);
 		requestLocButton.setText("跟随");
 		requestLocButton.setOnClickListener(new btnClickListener());
-		
+
+		mBaiduMap.getUiSettings().setScrollGesturesEnabled(false);
+		mBaiduMap.setMaxAndMinZoomLevel(19, 18);
 		mBaiduMap.setMyLocationEnabled(true);
 		mLocClient = new LocationClient(mainActivity);
 		mCurrentMode = LocationMode.FOLLOWING;
-		mBaiduMap.setMyLocationConfigeration(new MyLocationConfiguration(mCurrentMode, true, mCurrentMarker));
+		mBaiduMap.setMyLocationConfigeration(new MyLocationConfiguration(
+				mCurrentMode, true, mCurrentMarker));
 		mLocClient.registerLocationListener(new MyLocationListener());
-		
+
 		LocationClientOption option = new LocationClientOption();
 		option.setLocationMode(com.baidu.location.LocationClientOption.LocationMode.Hight_Accuracy);
 		option.setOpenGps(true);
 		option.setCoorType("bd09ll");
 		option.setNeedDeviceDirect(true);
 		mLocClient.setLocOption(option);
-		
+
 		mLocClient.start();
 
-//		t = new myThread();
-//		t.start();
+		// t = new myThread();
+		// t.start();
 	}
-	
-	void stop(){
+
+	void stop() {
+		lastZoomLv = mBaiduMap.getMapStatus().zoom;
+		startLoc = true;
 		mBaiduMap.setMyLocationEnabled(false);
 		mLocClient.stop();
 		isrun = false;
 	}
-	
-	void start(){
+
+	void start() {
 		mBaiduMap.setMyLocationEnabled(true);
-		if(!mLocClient.isStarted())
+		mBaiduMap.setMapStatus(MapStatusUpdateFactory.zoomTo(lastZoomLv));
+		if (!mLocClient.isStarted())
 			mLocClient.start();
 		isrun = true;
 		t = new myThread();
@@ -89,7 +105,7 @@ public class GetLocation {
 
 		public void run() {
 			do {
-//				System.out.println("我还在");
+				// System.out.println("我还在");
 				try {
 					Thread.sleep(30);
 				} catch (InterruptedException e) {
@@ -101,7 +117,7 @@ public class GetLocation {
 			} while (isrun);
 		}
 	}
-	
+
 	public class btnClickListener implements OnClickListener {
 		public void onClick(View v) {
 			switch (mCurrentMode) {
@@ -122,7 +138,7 @@ public class GetLocation {
 			}
 		}
 	}
-	
+
 	class MySensorEventListener implements SensorEventListener {
 
 		@Override
@@ -142,15 +158,15 @@ public class GetLocation {
 					locData = mBaiduMap.getLocationData();
 					MyLocationData locData2 = new MyLocationData.Builder()
 							.accuracy(locData.accuracy).direction(x)
-							.latitude(locData.latitude).longitude(locData.longitude)
-							.build();
+							.latitude(locData.latitude)
+							.longitude(locData.longitude).build();
 					mBaiduMap.setMyLocationData(locData2);
-					System.out.println(x + "xxxxxxxxxxxxxxxxxxx");
+					// System.out.println(x + "xxxxxxxxxxxxxxxxxxx");
 				}
 			}
 		}
 	}
-	
+
 	public class MyLocationListener implements BDLocationListener {
 
 		@Override
@@ -162,23 +178,10 @@ public class GetLocation {
 					.accuracy(location.getRadius()).direction(x)
 					.latitude(location.getLatitude())
 					.longitude(location.getLongitude()).build();
-			System.out.println(location.getLocType() + "/" + x + "/"
-					+ location.getLatitude() + "/" + location.getLongitude());
+			// System.out.println(location.getLocType() + "/" + x + "/"
+			// + location.getLatitude() + "/" + location.getLongitude());
 			mBaiduMap.setMyLocationData(locData);
-			if (isFirstLoc) {
-				isFirstLoc = false;
-				LatLng ll = new LatLng(location.getLatitude(),
-						location.getLongitude());
-				MapStatusUpdate u = MapStatusUpdateFactory.newLatLngZoom(ll, 19);
-				mBaiduMap.animateMapStatus(u);
-				
-				sensorManager = (SensorManager)mainActivity.getSystemService(Context.SENSOR_SERVICE);
-				Sensor sensor = sensorManager
-						.getDefaultSensor(Sensor.TYPE_ORIENTATION);
-				sensorManager.registerListener(new MySensorEventListener(),
-						sensor, SensorManager.SENSOR_DELAY_UI);
-			}
 		}
 	}
-	
+
 }

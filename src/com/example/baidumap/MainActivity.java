@@ -35,7 +35,7 @@ public class MainActivity extends Activity {
 	BaiduMap mBaiduMap = null;
 	
 	GetLocation getLocation;
-
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -48,6 +48,8 @@ public class MainActivity extends Activity {
 		// mBaiduMap.setOnMapClickListener(this);
 		
 		getLocation = new GetLocation(this, mMapView, mBaiduMap);
+		
+		mBaiduMap.setOnMapClickListener(new MyMapClickListener());
 	}
 
 	@Override
@@ -75,17 +77,4 @@ public class MainActivity extends Activity {
 		super.onResume();
 		System.out.println("resume");
 	}
-
-	// @Override
-	// public void onMapClick(LatLng arg0) {
-	// // TODO Auto-generated method stub
-	//
-	// }
-
-	// @Override
-	// public boolean onMapPoiClick(MapPoi arg0) {
-	// // TODO Auto-generated method stub
-	// System.out.println("哇卡卡卡卡卡   " + arg0.getName());
-	// return false;
-	// }
 }
